@@ -1,0 +1,14 @@
+FROM python:3.9-slim
+
+RUN mkdir /app
+
+COPY requirements.txt /app
+
+RUN python -m pip install --upgrade pip
+RUN pip3 install -r /app/requirements.txt --no-cache-dir
+
+COPY /backend /app
+WORKDIR /app
+
+CMD ["celery", "-A", "backend", "worker", "-B", "--loglevel=debug", "--scheduler", "django_celery_beat.schedulers:DatabaseScheduler", "--pool=solo"]
+

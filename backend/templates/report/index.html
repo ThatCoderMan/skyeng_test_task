@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}главная страница{% endblock %}
+{% block content %}
+    <div class="container">
+        <h1>Загрузка файла</h1>
+        {% if message %}
+            <div class="alert alert-info">
+                {{ message }}
+            </div>
+        {% endif %}
+        <form method="post" action="{% url 'reports:send' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="form-group">
+                <label for="fileInput">Выберите файл:</label>
+                <input type="file" class="form-control-file" id="fileInput" name="file">
+            </div>
+            <button type="submit" class="btn btn-primary">Загрузить</button>
+        </form>
+        <hr>
+        <h2>Список загруженных файлов:</h2>
+        {% for file in files %}
+            <div class="card my-2">
+                <div class="card-body">
+                    <a href="{{ file.file.url }}">{{ file.filename }}</a>
+                    <p>Статус: {% if file.is_reported %}Отчёт отправлен на почту{% elif is_checked %}Проверен{% else %}Новый{% endif %}</p>
+                    {% if not file.is_checked %}
+                        <form method="POST" action="{% url 'reports:delete' file.id %}">
+                            {% csrf_token %}
+                            <button class="btn btn-danger" type="submit">Удалить</button>
+                        </form>
+                        <form method="post" action="{% url 'reports:edit' file.id %}" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="fileInput">Выберите файл для замены:</label>
+                                <input type="file" class="form-control-file" id="fileInput" name="file">
+                            </div>
+                            <button type="submit" class="btn btn-secondary">заменить</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <p>Нет загруженных файлов</p>
+        {% endfor %}
+    </div>
+    <script>
+        function deleteFile(fileId) {
+
+        }
+
+        function replaceFile(fileId) {
+            // Код для замены файла
+        }
+    </script>
+{% endblock %}
