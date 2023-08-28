@@ -1,6 +1,7 @@
 from django.urls import path
-from django.views.generic.base import TemplateView
+
 from . import views
+
 app_name = 'reports'
 
 urlpatterns = [
@@ -8,4 +9,6 @@ urlpatterns = [
     path('report/send/', views.upload_file, name='send'),
     path('report/edit/<int:pk>', views.edit_file, name='edit'),
     path('report/delete/<int:pk>', views.delete_file, name='delete'),
+    path('data/uploads_reports/<int:pk>', views.get_file, name='get_file'),
+    path('data/reports/<int:pk>', views.get_report, name='get_report'),
 ]

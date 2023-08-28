@@ -1,6 +1,11 @@
 {% extends "base.html" %}
 {% block title %}главная страница{% endblock %}
 {% block content %}
+    {% for message in messages %}
+    <div class="alert alert-dismissible {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %}">
+        <strong>{{ message|striptags }}</strong>
+    </div>
+{% endfor %}
     <div class="container">
         <h1>Загрузка файла</h1>
         {% if message %}
@@ -18,38 +23,41 @@
         </form>
         <hr>
         <h2>Список загруженных файлов:</h2>
-        {% for file in files %}
+        {% for file in page_obj %}
             <div class="card my-2">
                 <div class="card-body">
-                    <a href="{{ file.file.url }}">{{ file.filename }}</a>
-                    <p>Статус: {% if file.is_reported %}Отчёт отправлен на почту{% elif is_checked %}Проверен{% else %}Новый{% endif %}</p>
-                    {% if not file.is_checked %}
-                        <form method="POST" action="{% url 'reports:delete' file.id %}">
-                            {% csrf_token %}
-                            <button class="btn btn-danger" type="submit">Удалить</button>
-                        </form>
-                        <form method="post" action="{% url 'reports:edit' file.id %}" enctype="multipart/form-data">
-                            {% csrf_token %}
-                            <div class="form-group">
-                                <label for="fileInput">Выберите файл для замены:</label>
-                                <input type="file" class="form-control-file" id="fileInput" name="file">
-                            </div>
-                            <button type="submit" class="btn btn-secondary">заменить</button>
-                        </form>
+                    <h2><a href="{% url 'reports:get_file' file.pk %}">{{ file.filename }}</a></h2>
+                    {% if file.is_checked %}
+                        <p>Отчёт: <a href="{% url 'reports:get_report' file.pk %}">{{ file.report.filename }}</a></p>
                     {% endif %}
+                    <p>Статус:
+                        {% if file.is_reported %}
+                            Отчёт отправлен на почту
+                        {% elif file.is_checked %}
+                            Проверен
+                        {% elif file.is_reloaded %}
+                            Обновлён
+                        {% else %}
+                            Новый
+                        {% endif %}
+                    </p>
+                    <form method="POST" action="{% url 'reports:delete' file.id %}">
+                        {% csrf_token %}
+                        <button class="btn btn-danger" type="submit">Удалить</button>
+                    </form>
+                    <form method="post" action="{% url 'reports:edit' file.id %}" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="form-group">
+                            <label for="fileInput">Выберите файл для замены:</label>
+                            <input type="file" class="form-control-file" id="fileInput" name="file">
+                        </div>
+                        <button type="submit" class="btn btn-secondary">заменить</button>
+                    </form>
                 </div>
             </div>
         {% empty %}
             <p>Нет загруженных файлов</p>
         {% endfor %}
+        {% include 'includes/paginator.html' %}
     </div>
-    <script>
-        function deleteFile(fileId) {
-
-        }
-
-        function replaceFile(fileId) {
-            // Код для замены файла
-        }
-    </script>
 {% endblock %}

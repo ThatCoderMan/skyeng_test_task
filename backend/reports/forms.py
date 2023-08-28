@@ -1,6 +1,7 @@
 from django import forms
-from .models import File
 from django.contrib.auth import get_user_model
+
+from .models import File
 
 User = get_user_model()
 
@@ -11,5 +12,3 @@ class UploadFileForm(forms.ModelForm):
     class Meta:
         model = File
         fields = ('file', 'user')
-
-

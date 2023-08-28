@@ -1,30 +1,60 @@
-import datetime
-
 from celery import shared_task
-from django_celery_beat.models import PeriodicTask
+from django.core.mail import EmailMessage
 
-from core.pep8_checker import check_pep8_files
-from reports.models import File
-from celery.schedules import crontab
-from celery import Celery
+from backend.settings import EMAIL_SENT_TIMEOUT
+from reports.models import File, Pep8Warning, Report
 
-
-# app = Celery()
-
-
-# @app.on_after_configure.connect
-# def setup_periodic_tasks(sender, **kwargs):
-#     print('start')
-#     sender.add_periodic_task(10.0, repeat_file_checker.s(), name='add every 10')
+from .utils import check_pep8_files, generate_report
 
 
 @shared_task(name="repeat_file_checker")
 def repeat_file_checker():
-    print('start')
     unchecked_files = File.objects.filter(is_checked=False)
-    file_paths = [file.file.path for file in unchecked_files]
-    results = check_pep8_files(file_paths)
-    unchecked_files[0].is_reported = True
-    unchecked_files[0].save()
-    print(results)
+    if unchecked_files:
+        file_paths = [str(file.file.path) for file in unchecked_files]
+        results = check_pep8_files(file_paths)
+        for file, result in zip(unchecked_files, results):
+            old_report = Report.objects.filter(file=file)
+            if old_report.exists():
+                old_report.delete()
+            report = Report(file=file)
+            report.save()
+            _, warnings, _ = result
+            for warning in warnings:
+                status_code, line, column, message, code_line = warning
+                Pep8Warning(
+                    report=report,
+                    status_code=status_code,
+                    line=line,
+                    column=column,
+                    message=message,
+                    code_line=code_line
+                ).save()
+            generate_report(file)
+            file.is_checked = True
+            file.save()
+            send_report.apply_async((file.pk,), countdown=EMAIL_SENT_TIMEOUT)
 
+
+@shared_task(name="send_report")
+def send_report(file_id):
+    file = File.objects.get(pk=file_id)
+    warnings_count = file.report.pep8_warnings.count()
+    if warnings_count:
+        message = (
+            f'Файл {file.filename} проверен.\n'
+            f'Найдено замечаний: {warnings_count}.'
+        )
+    else:
+        message = f'Файл {file.filename} проверен.\n Замечаний не найдено.'
+    email = EmailMessage(
+        f'Отчёт по файлу: {file.filename}',
+        message,
+        'pep8@checker.com',
+        [file.user.email]
+    )
+    if warnings_count:
+        email.attach_file(str(file.report.report_file.path))
+    email.send()
+    file.is_reported = True
+    file.save()
