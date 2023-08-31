@@ -65,16 +65,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backend.wsgi.application"
 
-# Database
-# https://docs.djangoproject.com/en/4.2/ref/settings/#databases
-
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': str(BASE_DIR / 'db.sqlite3'),
-#     }
-# }
-
 DATABASES = {
    'default': {
        'ENGINE': os.getenv('DB_ENGINE',
@@ -117,6 +107,8 @@ STATIC_ROOT = BASE_DIR / 'static'
 MEDIA_URL = '/data/'
 MEDIA_ROOT = BASE_DIR / 'data'
 
+ITEMS_ON_PAGE = 5
+EMAIL_SENT_TIMEOUT = 60
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -142,6 +134,3 @@ EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
 EMAIL_FILE_PATH = BASE_DIR / 'sent_emails'
 
 CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
-
-ITEMS_ON_PAGE = 5
-EMAIL_SENT_TIMEOUT = 60
