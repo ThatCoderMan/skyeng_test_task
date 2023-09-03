@@ -1,4 +1,5 @@
-name: deploy workflow
+name: deploy
+on: [push]
 
 jobs:
   deploy:
