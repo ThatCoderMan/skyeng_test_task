@@ -2,6 +2,6 @@
 {% block title %}Ошибка 403{% endblock %}
 {% block content %}
   <h1>Ошибка 403</h1>
-  <p>Доступ запрещён</p>
-  <a href="{% url 'posts:index' %}">перейти на главную страницу</a>
+  <p>Ошибка csrf токена</p>
+  <a href="{% url 'reports:index' %}">перейти на главную страницу</a>
 {% endblock %} 
